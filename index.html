@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Presidential Research Project</title>
+<style>
+:root{--navy:#101f38;--navy2:#1b3152;--gold:#c6a45b;--ink:#172235;--muted:#687487;--paper:#f5f6f8;--line:#e2e6ec}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 Georgia,serif}
+header{background:linear-gradient(120deg,var(--navy),#243d61);color:white;padding:26px max(22px,calc((100% - 1180px)/2));border-bottom:4px solid var(--gold)}
+.brand{font:700 13px Arial,sans-serif;letter-spacing:.19em;color:#e4c985;text-transform:uppercase}
+h1{font-size:clamp(27px,4vw,42px);line-height:1.1;margin:10px 0 7px}
+.tagline{color:#d6deea;margin:0}
+nav{background:#fff;border-bottom:1px solid var(--line);padding:0 max(22px,calc((100% - 1180px)/2));display:flex;gap:24px;flex-wrap:wrap}
+nav a{font:600 13px Arial,sans-serif;color:var(--navy);text-decoration:none;padding:15px 0}
+main{max-width:1180px;margin:30px auto;padding:0 22px}
+.kicker{font:700 11px Arial,sans-serif;letter-spacing:.16em;color:#9a7938;text-transform:uppercase}
+h2{font-size:28px;margin:5px 0 8px;color:var(--navy)}
+.intro{max-width:760px;color:var(--muted);margin:0 0 24px}
+.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:20px;margin:18px 0;box-shadow:0 4px 16px #15243a08}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:13px}
+label{display:block;font:700 11px Arial,sans-serif;text-transform:uppercase;letter-spacing:.07em;color:#596579;margin-bottom:6px}
+select,button{width:100%;border:1px solid #ccd3dd;border-radius:7px;padding:11px;background:white;color:var(--ink);font:14px Arial,sans-serif}
+button{background:var(--navy);color:white;border-color:var(--navy);cursor:pointer}
+button:hover{background:var(--navy2)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:18px 0}
+.stat{background:#f8f9fb;border:1px solid var(--line);border-radius:9px;padding:14px}
+.stat strong{display:block;font:700 25px Arial,sans-serif;color:var(--navy)}
+.stat span{font:12px Arial,sans-serif;color:var(--muted)}
+.map-wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,.8fr);gap:18px}
+.tiles{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}
+.tile{border:0;border-radius:4px;background:#dfe3e9;color:#566174;padding:10px 2px;font:700 10px Arial,sans-serif;min-height:39px}
+.tile:hover{outline:2px solid var(--gold);background:#d2d9e3}
+.tile.active{background:var(--gold);color:#172235}
+.detail{background:#f8f9fb;border:1px solid var(--line);border-radius:9px;padding:16px;min-height:155px}
+.detail h3{margin:0 0 7px;color:var(--navy);font-size:19px}
+.detail p{color:var(--muted);font-size:13px}
+.note{border-left:3px solid var(--gold);padding:10px 13px;background:#fbf8f0;color:#675b43;font-size:13px;margin-top:15px}
+table{border-collapse:collapse;width:100%;font:13px Arial,sans-serif}
+th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line)}
+th{color:#566174;text-transform:uppercase;font-size:10px;letter-spacing:.07em}
+.empty{text-align:center;color:var(--muted);padding:25px}
+footer{margin-top:45px;background:var(--navy);color:#d9e0e9;padding:25px max(22px,calc((100% - 1180px)/2));font:12px Arial,sans-serif}
+footer strong{color:#e4c985}
+@media(max-width:700px){.map-wrap{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(6,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">The Presidential Research Project</div>
+  <h1>Polls vs. Results</h1>
+  <p class="tagline">Documenting the Presidency. Understanding American History.</p>
+</header>
+<nav>
+  <a href="#elections">ELECTION RESEARCH</a><a href="#map">INTERACTIVE MAP</a><a href="#records">POLLING RECORDS</a><a href="#methodology">METHODOLOGY</a>
+</nav>
+<main>
+<section id="elections">
+  <div class="kicker">Election research database</div>
+  <h2>What did the polls say—and what happened?</h2>
+  <p class="intro">Explore pre-election polling alongside certified presidential election results. Select an election and polling organization to investigate state-level comparisons. Data will appear as verified records are added.</p>
+  <div class="panel">
+    <div class="controls">
+      <div><label for="year">Presidential election</label><select id="year"><option>2024</option><option>2020</option><option>2016</option><option>2012</option><option>2008</option><option>2004</option><option>2000</option></select></div>
+      <div><label for="view">View</label><select id="view"><option value="polls">Pre-election polling</option><option value="results">Actual election results</option></select></div>
+      <div><label for="pollster">Polling organization</label><select id="pollster"><option value="all">All organizations</option><option>Polling organization data not yet loaded</option></select></div>
+      <div><label for="window">Polling time period</label><select id="window"><option>All available dates</option><option>Final 30 days</option><option>Final 14 days</option><option>Final 7 days</option></select></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="stat-year">2024</strong><span>Selected election</span></div>
+      <div class="stat"><strong>50 + DC</strong><span>State and district jurisdictions</span></div>
+      <div class="stat"><strong>—</strong><span>Verified records loaded</span></div>
+      <div class="stat"><strong>—</strong><span>Average polling error</span></div>
+    </div>
+  </div>
+</section>
+<section id="map">
+  <div class="kicker">Geographic comparison</div><h2>Explore by state</h2>
+  <div class="panel map-wrap">
+    <div><div id="tiles" class="tiles" aria-label="State selector"></div><div class="note">Gray states indicate that verified data has not yet been loaded. This prototype uses a state tile layout, not geographic boundary polygons.</div></div>
+    <aside class="detail" id="detail"><h3>Select a state</h3><p>Choose a state tile to view its available polling and election-result records.</p></aside>
+  </div>
+</section>
+<section id="records">
+  <div class="kicker">Source-level records</div><h2>State-by-state records</h2>
+  <div class="panel"><div class="empty">No verified polling records have been loaded yet. Add sourced records to the data file before publishing factual comparisons.</div>
+  <table><thead><tr><th>State</th><th>Pollster</th><th>Field dates</th><th>Candidate / result</th><th>Source</th></tr></thead><tbody id="records-body"><tr><td colspan="5" class="empty">Awaiting verified data</td></tr></tbody></table></div>
+</section>
+<section id="methodology">
+  <div class="kicker">Research standards</div><h2>Methodology & transparency</h2>
+  <div class="panel">
+    <p>Every polling record should identify the polling organization, field dates, population surveyed, sample size, survey mode, question wording where available, source, and retrieval date.</p>
+    <p>Polls are snapshots of opinion during a defined period—not guarantees or predictions. Compare state polling with that state's actual result. Do not treat missing data as zero, infer missing state polls, or present an average as an individual pollster's result.</p>
+    <p>Historical state-level polling is not available for every election. Clearly label unavailable years and jurisdictions. Check source terms and obtain permission before republishing restricted polling data.</p>
+  </div>
+</section>
+</main>
+<footer><strong>THE PRESIDENTIAL RESEARCH PROJECT</strong><br>Independent educational research. Sources and methodology should accompany every published dataset.<br><br>Prototype version — polling data has not yet been populated.</footer>
+<script>
+const states=["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
+const names={"AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"California","CO":"Colorado","CT":"Connecticut","DE":"Delaware","FL":"Florida","GA":"Georgia","HI":"Hawaii","ID":"Idaho","IL":"Illinois","IN":"Indiana","IA":"Iowa","KS":"Kansas","KY":"Kentucky","LA":"Louisiana","ME":"Maine","MD":"Maryland","MA":"Massachusetts","MI":"Michigan","MN":"Minnesota","MS":"Mississippi","MO":"Missouri","MT":"Montana","NE":"Nebraska","NV":"Nevada","NH":"New Hampshire","NJ":"New Jersey","NM":"New Mexico","NY":"New York","NC":"North Carolina","ND":"North Dakota","OH":"Ohio","OK":"Oklahoma","OR":"Oregon","PA":"Pennsylvania","RI":"Rhode Island","SC":"South Carolina","SD":"South Dakota","TN":"Tennessee","TX":"Texas","UT":"Utah","VT":"Vermont","VA":"Virginia","WA":"Washington","WV":"West Virginia","WI":"Wisconsin","WY":"Wyoming","DC":"District of Columbia"};
+const tiles=document.getElementById("tiles");
+states.forEach(s=>{const b=document.createElement("button");b.className="tile";b.textContent=s;b.title=names[s];b.addEventListener("click",()=>{document.querySelectorAll(".tile").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById("detail").innerHTML=`<h3>${names[s]}</h3><p>No verified ${document.getElementById("view").value==="polls"?"polling":"election result"} records are currently loaded for this jurisdiction and election.</p>`});tiles.appendChild(b)});
+document.getElementById("year").addEventListener("change",e=>document.getElementById("stat-year").textContent=e.target.value);
+</script>
+</body></html>
