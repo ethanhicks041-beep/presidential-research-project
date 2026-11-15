@@ -28,10 +28,14 @@ button:hover{background:var(--navy2)}
 .stat strong{display:block;font:700 25px Arial,sans-serif;color:var(--navy)}
 .stat span{font:12px Arial,sans-serif;color:var(--muted)}
 .map-wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,.8fr);gap:18px}
-.tiles{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}
-.tile{border:0;border-radius:4px;background:#dfe3e9;color:#566174;padding:10px 2px;font:700 10px Arial,sans-serif;min-height:39px}
-.tile:hover{outline:2px solid var(--gold);background:#d2d9e3}
-.tile.active{background:var(--gold);color:#172235}
+.us-map{width:100%;height:auto;display:block;overflow:visible;background:#f8f9fb;border:1px solid var(--line);border-radius:9px}
+.state-shape{stroke:#fff;stroke-width:1.35;cursor:pointer;transition:fill .15s,opacity .15s}
+.state-shape:hover{stroke:var(--gold);stroke-width:3;opacity:.9}
+.state-shape.active{stroke:var(--gold);stroke-width:3}
+.state-label{font:700 10px Arial,sans-serif;fill:#263449;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:2.5px;stroke-linejoin:round}
+.map-legend{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0;font:12px Arial,sans-serif;color:var(--muted)}
+.legend-dot{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.map-status{font:12px Arial,sans-serif;color:var(--muted);margin:8px 0 0}
 .detail{background:#f8f9fb;border:1px solid var(--line);border-radius:9px;padding:16px;min-height:155px}
 .detail h3{margin:0 0 7px;color:var(--navy);font-size:19px}
 .detail p{color:var(--muted);font-size:13px}
@@ -42,7 +46,7 @@ th{color:#566174;text-transform:uppercase;font-size:10px;letter-spacing:.07em}
 .empty{text-align:center;color:var(--muted);padding:25px}
 footer{margin-top:45px;background:var(--navy);color:#d9e0e9;padding:25px max(22px,calc((100% - 1180px)/2));font:12px Arial,sans-serif}
 footer strong{color:#e4c985}
-@media(max-width:700px){.map-wrap{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(6,1fr)}}
+@media(max-width:700px){.map-wrap{grid-template-columns:1fr}.state-label{font-size:9px}}
 </style>
 </head>
 <body>
@@ -77,7 +81,18 @@ footer strong{color:#e4c985}
 <section id="map">
   <div class="kicker">Geographic comparison</div><h2>Explore by state</h2>
   <div class="panel map-wrap">
-    <div><div id="tiles" class="tiles" aria-label="State selector"></div><div class="note">Gray states indicate that verified data has not yet been loaded. This prototype uses a state tile layout, not geographic boundary polygons.</div></div>
+    <div>
+      <svg id="us-map" class="us-map" viewBox="0 0 960 600" role="img" aria-label="Interactive map of the United States by state">
+        <text x="480" y="290" text-anchor="middle" fill="#687487" font-family="Arial" font-size="18">Loading geographic map…</text>
+      </svg>
+      <div class="map-legend">
+        <span><i class="legend-dot" style="background:#c94b4b"></i>Trump win</span>
+        <span><i class="legend-dot" style="background:#416fa8"></i>Harris win</span>
+        <span><i class="legend-dot" style="background:#dfe3e9"></i>Data unavailable</span>
+      </div>
+      <div class="map-status" id="map-status">Select a state on the map to view its results.</div>
+      <div class="note">State boundaries are geographic. Alaska and Hawaii appear in their conventional inset positions. Gray states indicate that verified results are unavailable for the selected view.</div>
+    </div>
     <aside class="detail" id="detail"><h3>Select a state</h3><p>Choose a state tile to view its available polling and election-result records.</p></aside>
   </div>
 </section>
@@ -96,88 +111,164 @@ footer strong{color:#e4c985}
 </section>
 </main>
 <footer><strong>THE PRESIDENTIAL RESEARCH PROJECT</strong><br>Independent educational research. Sources and methodology should accompany every published dataset.<br><br>Prototype version — polling data has not yet been populated.</footer>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <script>
-const states=["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
-const names={"AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"California","CO":"Colorado","CT":"Connecticut","DE":"Delaware","FL":"Florida","GA":"Georgia","HI":"Hawaii","ID":"Idaho","IL":"Illinois","IN":"Indiana","IA":"Iowa","KS":"Kansas","KY":"Kentucky","LA":"Louisiana","ME":"Maine","MD":"Maryland","MA":"Massachusetts","MI":"Michigan","MN":"Minnesota","MS":"Mississippi","MO":"Missouri","MT":"Montana","NE":"Nebraska","NV":"Nevada","NH":"New Hampshire","NJ":"New Jersey","NM":"New Mexico","NY":"New York","NC":"North Carolina","ND":"North Dakota","OH":"Ohio","OK":"Oklahoma","OR":"Oregon","PA":"Pennsylvania","RI":"Rhode Island","SC":"South Carolina","SD":"South Dakota","TN":"Tennessee","TX":"Texas","UT":"Utah","VT":"Vermont","VA":"Virginia","WA":"Washington","WV":"West Virginia","WI":"Wisconsin","WY":"Wyoming","DC":"District of Columbia"};
-const tiles=document.getElementById("tiles");
-states.forEach(s=>{const b=document.createElement("button");b.className="tile";b.textContent=s;b.title=names[s];b.addEventListener("click",()=>{document.querySelectorAll(".tile").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById("detail").innerHTML=`<h3>${names[s]}</h3><p>No verified ${document.getElementById("view").value==="polls"?"polling":"election result"} records are currently loaded for this jurisdiction and election.</p>`});tiles.appendChild(b)});
-document.getElementById("year").addEventListener("change",e=>document.getElementById("stat-year").textContent=e.target.value);
+const stateNames = {
+  "01":"Alabama","02":"Alaska","04":"Arizona","05":"Arkansas","06":"California",
+  "08":"Colorado","09":"Connecticut","10":"Delaware","11":"District of Columbia",
+  "12":"Florida","13":"Georgia","15":"Hawaii","16":"Idaho","17":"Illinois",
+  "18":"Indiana","19":"Iowa","20":"Kansas","21":"Kentucky","22":"Louisiana",
+  "23":"Maine","24":"Maryland","25":"Massachusetts","26":"Michigan","27":"Minnesota",
+  "28":"Mississippi","29":"Missouri","30":"Montana","31":"Nebraska","32":"Nevada",
+  "33":"New Hampshire","34":"New Jersey","35":"New Mexico","36":"New York",
+  "37":"North Carolina","38":"North Dakota","39":"Ohio","40":"Oklahoma",
+  "41":"Oregon","42":"Pennsylvania","44":"Rhode Island","45":"South Carolina",
+  "46":"South Dakota","47":"Tennessee","48":"Texas","49":"Utah","50":"Vermont",
+  "51":"Virginia","53":"Washington","54":"West Virginia","55":"Wisconsin","56":"Wyoming"
+};
+const stateCodes = {
+  "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE",
+  "11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA",
+  "20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN",
+  "28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM",
+  "36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI",
+  "45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA",
+  "54":"WV","55":"WI","56":"WY"
+};
 
 let prpResults = [];
 let selectedPRPState = null;
+let stateFeatures = [];
+let statePaths = null;
+
+const svg = d3.select("#us-map");
+const mapStatus = document.getElementById("map-status");
+
+function currentResult(code) {
+  return prpResults.find(r => r.code === code);
+}
+
+function updatePRPDisplay() {
+  const year = document.getElementById("year").value;
+  const view = document.getElementById("view").value;
+  const isResults = year === "2024" && view === "results";
+
+  if (statePaths) {
+    statePaths
+      .attr("fill", feature => {
+        const code = stateCodes[String(feature.id).padStart(2, "0")];
+        const result = isResults ? currentResult(code) : null;
+        if (!result) return "#dfe3e9";
+        return result.trump > result.harris ? "#c94b4b" : "#416fa8";
+      })
+      .classed("active", feature =>
+        stateCodes[String(feature.id).padStart(2, "0")] === selectedPRPState
+      );
+  }
+
+  if (selectedPRPState) {
+    const result = currentResult(selectedPRPState);
+    const detail = document.getElementById("detail");
+    const stateName = stateNames[Object.keys(stateCodes).find(k => stateCodes[k] === selectedPRPState)];
+    if (isResults && result) {
+      const winner = result.trump > result.harris ? "Donald Trump" : "Kamala Harris";
+      const margin = Math.abs(result.trump - result.harris);
+      const totalTwoCandidateVotes = result.trump + result.harris;
+      const marginPercent = totalTwoCandidateVotes
+        ? (margin / totalTwoCandidateVotes * 100).toFixed(2)
+        : "—";
+      detail.innerHTML = `
+        <h3>${result.state}</h3>
+        <p><strong>Winner:</strong> ${winner}</p>
+        <p>Donald Trump: ${result.trump.toLocaleString()}</p>
+        <p>Kamala Harris: ${result.harris.toLocaleString()}</p>
+        <p><strong>Two-candidate margin:</strong> ${margin.toLocaleString()} votes (${marginPercent}% of these two candidates' combined votes)</p>
+        <p>Source listed in dataset: ${"Federal Election Commission"}</p>
+      `;
+    } else {
+      detail.innerHTML = `
+        <h3>${stateName || selectedPRPState}</h3>
+        <p>${year === "2024" && view === "polls"
+          ? "Pre-election polling data has not yet been loaded."
+          : "Election results for this selection have not yet been loaded."}</p>
+      `;
+    }
+  }
+}
+
+function drawMap(us) {
+  const features = topojson.feature(us, us.objects.states).features;
+  const projection = d3.geoAlbersUsa().fitExtent([[20, 20], [940, 580]], {
+    type: "FeatureCollection",
+    features
+  });
+  const path = d3.geoPath(projection);
+  stateFeatures = features;
+
+  svg.selectAll("*").remove();
+
+  statePaths = svg.append("g")
+    .selectAll("path")
+    .data(features)
+    .join("path")
+    .attr("class", "state-shape")
+    .attr("d", path)
+    .attr("fill", "#dfe3e9")
+    .attr("data-code", feature => stateCodes[String(feature.id).padStart(2, "0")])
+    .on("click", (event, feature) => {
+      selectedPRPState = stateCodes[String(feature.id).padStart(2, "0")];
+      mapStatus.textContent = `Selected ${stateNames[String(feature.id).padStart(2, "0")] || selectedPRPState}.`;
+      updatePRPDisplay();
+    })
+    .append("title")
+    .text(feature => stateNames[String(feature.id).padStart(2, "0")] || "State");
+
+  // Add abbreviations for states large enough to label clearly.
+  svg.append("g")
+    .selectAll("text")
+    .data(features.filter(f => !["09","10","11","23","24","25","33","34","44","50"].includes(String(f.id).padStart(2, "0"))))
+    .join("text")
+    .attr("class", "state-label")
+    .attr("transform", feature => `translate(${path.centroid(feature)})`)
+    .text(feature => stateCodes[String(feature.id).padStart(2, "0")] || "");
+
+  updatePRPDisplay();
+  mapStatus.textContent = "Map loaded. Select any state to view available records.";
+}
 
 async function loadPRPResults() {
+  document.getElementById("year").addEventListener("change", e => {
+    document.getElementById("stat-year").textContent = e.target.value;
+    updatePRPDisplay();
+  });
+  document.getElementById("view").addEventListener("change", updatePRPDisplay);
+
   try {
     const response = await fetch("data/2024-results.json");
     if (!response.ok) throw new Error("Data file not found");
-
     const data = await response.json();
-    prpResults = data.results;
-
-    function updatePRPDisplay() {
-      const year = document.getElementById("year").value;
-      const view = document.getElementById("view").value;
-      const isResults = year === "2024" && view === "results";
-
-      document.querySelectorAll(".tile").forEach(tile => {
-        const result = prpResults.find(r => r.code === tile.textContent);
-        tile.style.background = "#dfe3e9";
-        tile.style.color = "#566174";
-
-        if (isResults && result) {
-          tile.style.background =
-            result.trump > result.harris ? "#c94b4b" : "#416fa8";
-          tile.style.color = "white";
-        }
-      });
-
-      if (selectedPRPState) {
-        const result = prpResults.find(
-          r => r.code === selectedPRPState
-        );
-        const detail = document.getElementById("detail");
-
-        if (isResults && result) {
-          const winner = result.trump > result.harris
-            ? "Donald Trump"
-            : "Kamala Harris";
-          const margin = Math.abs(result.trump - result.harris);
-
-          detail.innerHTML = `
-            <h3>${result.state}</h3>
-            <p><strong>Winner:</strong> ${winner}</p>
-            <p>Donald Trump: ${result.trump.toLocaleString()}</p>
-            <p>Kamala Harris: ${result.harris.toLocaleString()}</p>
-            <p><strong>Two-candidate margin:</strong>
-            ${margin.toLocaleString()}</p>
-            <p>Source: ${data.source}</p>
-          `;
-        } else {
-          detail.innerHTML = `
-            <h3>${selectedPRPState}</h3>
-            <p>${year === "2024" && view === "polls"
-              ? "Pre-election polling data has not yet been loaded."
-              : "Election results for this selection have not yet been loaded."}</p>
-          `;
-        }
-      }
-    }
-
-    document.querySelectorAll(".tile").forEach(tile => {
-      tile.addEventListener("click", () => {
-        selectedPRPState = tile.textContent;
-        updatePRPDisplay();
-      });
-    });
-
-    document.getElementById("year").addEventListener("change", updatePRPDisplay);
-    document.getElementById("view").addEventListener("change", updatePRPDisplay);
-
-    updatePRPDisplay();
+    prpResults = data.results || [];
   } catch (error) {
     console.error("PRP data loading error:", error);
-    document.getElementById("detail").innerHTML =
-      "<h3>Data loading error</h3><p>Could not load the 2024 results file. Check its filename and location.</p>";
+    mapStatus.textContent = "Election data could not be loaded. The geographic map can still be used.";
+  }
+
+  try {
+    const mapResponse = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+    if (!mapResponse.ok) throw new Error("Map boundary file could not be loaded");
+    const us = await mapResponse.json();
+    drawMap(us);
+  } catch (error) {
+    console.error("Geographic map loading error:", error);
+    svg.selectAll("*").remove();
+    svg.append("text")
+      .attr("x", 480).attr("y", 280)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#687487")
+      .attr("font-size", 18)
+      .text("Map boundaries could not be loaded. Check your internet connection.");
+    mapStatus.textContent = "The geographic map requires access to the map-boundary service.";
   }
 }
 
