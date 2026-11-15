@@ -102,5 +102,85 @@ const names={"AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"C
 const tiles=document.getElementById("tiles");
 states.forEach(s=>{const b=document.createElement("button");b.className="tile";b.textContent=s;b.title=names[s];b.addEventListener("click",()=>{document.querySelectorAll(".tile").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById("detail").innerHTML=`<h3>${names[s]}</h3><p>No verified ${document.getElementById("view").value==="polls"?"polling":"election result"} records are currently loaded for this jurisdiction and election.</p>`});tiles.appendChild(b)});
 document.getElementById("year").addEventListener("change",e=>document.getElementById("stat-year").textContent=e.target.value);
+
+let prpResults = [];
+let selectedPRPState = null;
+
+async function loadPRPResults() {
+  try {
+    const response = await fetch("data/2024-results.json");
+    if (!response.ok) throw new Error("Data file not found");
+
+    const data = await response.json();
+    prpResults = data.results;
+
+    function updatePRPDisplay() {
+      const year = document.getElementById("year").value;
+      const view = document.getElementById("view").value;
+      const isResults = year === "2024" && view === "results";
+
+      document.querySelectorAll(".tile").forEach(tile => {
+        const result = prpResults.find(r => r.code === tile.textContent);
+        tile.style.background = "#dfe3e9";
+        tile.style.color = "#566174";
+
+        if (isResults && result) {
+          tile.style.background =
+            result.trump > result.harris ? "#c94b4b" : "#416fa8";
+          tile.style.color = "white";
+        }
+      });
+
+      if (selectedPRPState) {
+        const result = prpResults.find(
+          r => r.code === selectedPRPState
+        );
+        const detail = document.getElementById("detail");
+
+        if (isResults && result) {
+          const winner = result.trump > result.harris
+            ? "Donald Trump"
+            : "Kamala Harris";
+          const margin = Math.abs(result.trump - result.harris);
+
+          detail.innerHTML = `
+            <h3>${result.state}</h3>
+            <p><strong>Winner:</strong> ${winner}</p>
+            <p>Donald Trump: ${result.trump.toLocaleString()}</p>
+            <p>Kamala Harris: ${result.harris.toLocaleString()}</p>
+            <p><strong>Two-candidate margin:</strong>
+            ${margin.toLocaleString()}</p>
+            <p>Source: ${data.source}</p>
+          `;
+        } else {
+          detail.innerHTML = `
+            <h3>${selectedPRPState}</h3>
+            <p>${year === "2024" && view === "polls"
+              ? "Pre-election polling data has not yet been loaded."
+              : "Election results for this selection have not yet been loaded."}</p>
+          `;
+        }
+      }
+    }
+
+    document.querySelectorAll(".tile").forEach(tile => {
+      tile.addEventListener("click", () => {
+        selectedPRPState = tile.textContent;
+        updatePRPDisplay();
+      });
+    });
+
+    document.getElementById("year").addEventListener("change", updatePRPDisplay);
+    document.getElementById("view").addEventListener("change", updatePRPDisplay);
+
+    updatePRPDisplay();
+  } catch (error) {
+    console.error("PRP data loading error:", error);
+    document.getElementById("detail").innerHTML =
+      "<h3>Data loading error</h3><p>Could not load the 2024 results file. Check its filename and location.</p>";
+  }
+}
+
+loadPRPResults();
 </script>
 </body></html>
